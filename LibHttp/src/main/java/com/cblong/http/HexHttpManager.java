@@ -8,12 +8,9 @@ import com.cblong.http.callback.HexHttpCallback;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Map;
 
 import okhttp3.MediaType;
-import okhttp3.Request;
-import okhttp3.Response;
 
 public abstract class HexHttpManager {
 
