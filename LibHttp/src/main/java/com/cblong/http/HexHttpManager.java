@@ -3,7 +3,7 @@ package com.cblong.http;
 import android.util.Log;
 
 
-import com.cblong.http.callback.HexHttpCallback;
+import com.cblong.http.callback.HttpCallback;
 
 import org.json.JSONObject;
 
@@ -29,7 +29,7 @@ public abstract class HexHttpManager {
 
     public abstract String postRequest(String url, JSONObject json);
 
-    public abstract void Request(int method, String url, Map<String, String> params, HexHttpCallback callback);
+    public abstract void Request(int method, String url, Map<String, String> params, HttpCallback callback);
 
     public abstract String upload(String urlStr, String uploadKey, File file, MediaType mediaType);
 

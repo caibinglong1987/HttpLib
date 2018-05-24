@@ -4,7 +4,7 @@ import android.os.StrictMode;
 import android.text.TextUtils;
 
 
-import com.cblong.http.callback.HexHttpCallback;
+import com.cblong.http.callback.HttpCallback;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,7 +16,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -95,6 +94,7 @@ public class HexOkHexHttpManager extends HexHttpManager {
         }
     }
 
+
     /**
      * post body json数据
      * 回调出结果
@@ -104,7 +104,7 @@ public class HexOkHexHttpManager extends HexHttpManager {
      * @param params   参数
      */
     @Override
-    public void Request(int method, String url, Map<String, String> params, final HexHttpCallback callback) {
+    public void Request(int method, String url, Map<String, String> params, final HttpCallback callback) {
         if (url == null || url.equals("")) {
             return;
         }
@@ -128,17 +128,14 @@ public class HexOkHexHttpManager extends HexHttpManager {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                Map errorMap = new HashMap();
-                errorMap.put(HexErrorMapHelper.KEY_CALL, call);
-                errorMap.put(HexErrorMapHelper.KEY_EXCEPTION, e);
-                callback.onFailure(errorMap);
+                callback.onFailure(e);
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if (response.isSuccessful()) {
                     final String result = response.body().string();
-                    callback.onSuccess(result);
+                    callback.onSucceed(result);
                 }
             }
         });
@@ -272,7 +269,7 @@ public class HexOkHexHttpManager extends HexHttpManager {
     /**
      * post  from 请求(一般使用这个)
      */
-    public void postRequest(String url, RequestBody params, final HexHttpCallback callback) {
+    public void postRequest(String url, RequestBody params, final HttpCallback callback) {
         if (url == null || url.equals("")) {
             return;
         }
@@ -283,17 +280,14 @@ public class HexOkHexHttpManager extends HexHttpManager {
         call.enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                Map errorMap = new HashMap();
-                errorMap.put(HexErrorMapHelper.KEY_CALL, call);
-                errorMap.put(HexErrorMapHelper.KEY_EXCEPTION, e);
-                callback.onFailure(errorMap);
+                callback.onFailure(e);
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if (response.isSuccessful()) {
                     String result = response.body().string();
-                    callback.onSuccess(result);
+                    callback.onSucceed(result);
                 }
             }
         });
@@ -389,7 +383,7 @@ public class HexOkHexHttpManager extends HexHttpManager {
      * @param end      结束
      * @param callback 回调
      */
-    public void downloadEnqueue(String url, long start, long end, final HexHttpCallback callback) {
+    public void downloadEnqueue(String url, long start, long end, final HttpCallback callback) {
         Request request = new Request.Builder()
                 .url(url)
                 .header("Range", "bytes=" + start + "-" + end)
@@ -399,16 +393,13 @@ public class HexOkHexHttpManager extends HexHttpManager {
         call.enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                Map errorMap = new HashMap();
-                errorMap.put(HexErrorMapHelper.KEY_CALL, call);
-                errorMap.put(HexErrorMapHelper.KEY_EXCEPTION, e);
-                callback.onFailure(errorMap);
+                callback.onFailure(e);
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if (response.isSuccessful()) {
-                    callback.onSuccess(response.body().string());
+                    callback.onSucceed(response.body().string());
                 }
             }
         });
