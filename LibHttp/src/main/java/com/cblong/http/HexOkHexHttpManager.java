@@ -2,6 +2,7 @@ package com.cblong.http;
 
 import android.os.StrictMode;
 import android.text.TextUtils;
+import android.util.Log;
 
 
 import com.cblong.http.callback.HttpCallback;
@@ -22,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
+import okhttp3.Headers;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
@@ -35,6 +37,7 @@ import okhttp3.Response;
  */
 
 public class HexOkHexHttpManager extends HexHttpManager {
+    private static final String TAG = HexOkHexHttpManager.class.getSimpleName();
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     public static final MediaType XML = MediaType.parse("application/xml; charset=utf-8");
     public static final MediaType MEDIA_TYPE_MARKDOWN = MediaType.parse("text/x-markdown; charset=utf-8");
@@ -43,6 +46,7 @@ public class HexOkHexHttpManager extends HexHttpManager {
     private static HexOkHexHttpManager hexHttp;
     private OkHttpClient.Builder builder;
     private long connectTime = 60, writeTime = 30, readTime = 60;
+    private Headers.Builder headers;
 
     public static HexOkHexHttpManager getInstance() {
         if (hexHttp == null) {
@@ -54,6 +58,12 @@ public class HexOkHexHttpManager extends HexHttpManager {
         }
         return hexHttp;
     }
+
+    public HexOkHexHttpManager addHeader(String key, String value) {
+        headers.add(key, value);
+        return hexHttp;
+    }
+
 
     public HexOkHexHttpManager setConnectTimeout(long timeout) {
         this.connectTime = timeout;
@@ -72,6 +82,7 @@ public class HexOkHexHttpManager extends HexHttpManager {
 
     private HexOkHexHttpManager() {
         this.builder = new OkHttpClient.Builder();
+        this.headers = new Headers.Builder();
     }
 
     private OkHttpClient getClient() {
@@ -111,20 +122,24 @@ public class HexOkHexHttpManager extends HexHttpManager {
         if (params == null) {
             return;
         }
+
         init();//Android 2.3提供一个称为严苛模式（StrictMode）的调试特性
         OkHttpClient client = getClient();
         Request request;
         if (method == HexHttpManager.Method.GET) {
             String strUrl = restructureURL(HexHttpManager.Method.GET, url, params);
-            request = new Request.Builder().url(strUrl).build();
+            Log.d(TAG, strUrl);
+            request = new Request.Builder().url(strUrl).headers(headers.build()).build();
         } else {
             FormBody.Builder builder = new FormBody.Builder();
             for (Map.Entry<String, String> entry : params.entrySet()) {
                 builder.add(entry.getKey(), entry.getValue());
             }
+            Log.d(TAG, url + "?" + builder.toString());
             RequestBody requestBody = builder.build();
-            request = new Request.Builder().url(url).post(requestBody).build();
+            request = new Request.Builder().url(url).headers(headers.build()).post(requestBody).build();
         }
+
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -158,8 +173,8 @@ public class HexOkHexHttpManager extends HexHttpManager {
         //创建okHttpClient对象
         OkHttpClient client = getClient();
         //创建一个Request
-        Request request = new Request.Builder().url(strUrl).build();
         try {
+            Request request = new Request.Builder().url(strUrl).build();
             Response response = client.newCall(request).execute();
             return response.body().string();
         } catch (IOException e) {
@@ -183,9 +198,10 @@ public class HexOkHexHttpManager extends HexHttpManager {
         OkHttpClient client = getClient();
         String json = jsonObject.toString();
         if (json != null) {
-            RequestBody body = RequestBody.create(JSON, json);
-            Request request = new Request.Builder().url(url).post(body).build();
             try {
+                RequestBody body = RequestBody.create(JSON, json);
+                Log.d(TAG, url + "?" + body.toString());
+                Request request = new Request.Builder().url(url).headers(headers.build()).post(body).build();
                 Response response = client.newCall(request).execute();
                 return response.body().string();
             } catch (IOException e) {
@@ -208,10 +224,10 @@ public class HexOkHexHttpManager extends HexHttpManager {
         }
         init();//Android 2.3提供一个称为严苛模式（StrictMode）的调试特性
         OkHttpClient client = getClient();
-
-        RequestBody body = RequestBody.create(XML, xmlString);
-        Request request = new Request.Builder().url(url).post(body).build();
         try {
+            RequestBody body = RequestBody.create(XML, xmlString);
+            Log.d(TAG, url + "?" + body.toString());
+            Request request = new Request.Builder().headers(headers.build()).url(url).post(body).build();
             Response response = client.newCall(request).execute();
             try {
                 return response.body().string();
@@ -234,9 +250,10 @@ public class HexOkHexHttpManager extends HexHttpManager {
         OkHttpClient client = getClient();
         String json = getJson(params);
         if (json != null) {
-            RequestBody body = RequestBody.create(JSON, json);
-            Request request = new Request.Builder().url(url).post(body).build();
             try {
+                RequestBody body = RequestBody.create(JSON, json);
+                Log.d(TAG, url + "?" + body.toString());
+                Request request = new Request.Builder().url(url).headers(headers.build()).post(body).build();
                 Response response = client.newCall(request).execute();
                 return response.body().string();
             } catch (IOException e) {
@@ -254,9 +271,9 @@ public class HexOkHexHttpManager extends HexHttpManager {
             return null;
         }
         init();//Android 2.3提供一个称为严苛模式（StrictMode）的调试特性
-        OkHttpClient client = getClient();
-        Request request = new Request.Builder().url(url).post(params).build();
         try {
+            OkHttpClient client = getClient();
+            Request request = new Request.Builder().url(url).headers(headers.build()).post(params).build();
             Response response = client.newCall(request).execute();
             return response.body().string();
         } catch (IOException e) {
@@ -275,7 +292,7 @@ public class HexOkHexHttpManager extends HexHttpManager {
         }
         init();//Android 2.3提供一个称为严苛模式（StrictMode）的调试特性
         OkHttpClient client = getClient();
-        Request request = new Request.Builder().url(url).post(params).build();
+        Request request = new Request.Builder().url(url).headers(headers.build()).post(params).build();
         Call call = client.newCall(request);
         call.enqueue(new Callback() {
             @Override

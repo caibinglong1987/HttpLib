@@ -24,13 +24,8 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-
     implementation 'com.android.support:appcompat-v7:26.1.0'
     implementation 'com.squareup.okhttp3:okhttp:3.9.0'
-
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 }
 
 allprojects {
@@ -41,13 +36,55 @@ allprojects {
     }
 }
 
+
+tasks.withType(Jar){jarTask->
+    if(jarTask.name.equals('packageReleaseJar')){
+        jarTask.from android.sourceSets.main.java.srcDirs
+    }
+}
+
+//生成源文件
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+//生成文档
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    options.encoding "UTF-8"
+    options.charSet 'UTF-8'
+    options.author true
+    options.version true
+    options.links ""
+    failOnError false
+}
+
+//文档打包成jar
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+//拷贝javadoc文件
+task copyDoc(type: Copy) {
+    from "${buildDir}/docs/"
+    into "docs"
+}
+
+//上传到jcenter所需要的源码文件
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+
+
 ////添加
 apply plugin: 'com.novoda.bintray-release'
 publish {
     userOrg = 'caibinglong1987'//bintray.com用户名
     groupId = 'com.cblong.okhttp'//jcenter上的路径
     artifactId = 'LibOkhttp'//项目名称
-    publishVersion = '1.0.0'//版本号
+    publishVersion = '1.0.7'//版本号
     desc = 'Oh hi, this is a nice description for a project, right?'//描述，不重要
-    website = ''
+    website = 'https://github.com/caibinglong1987/HttpLib.git'
 }
